@@ -14,6 +14,7 @@ from nltk.tokenize import \
 from tqdm.notebook import tqdm
 from nltk.stem import WordNetLemmatizer 
 from keras.preprocessing.text import Tokenizer
+from torch.utils.data import TensorDataset, DataLoader
 
 translator = str.maketrans('', '', string.punctuation)
 stop_words = set(stopwords.words("english")) 
@@ -113,3 +114,25 @@ class Utility:
             'review_tensor': review_tensor,
             'label_tensor': label_tensor
         }
+    
+    @staticmethod
+    def tensors_to_dataloader(r_tensor, l_tensor, batch_size=16):
+        
+        data = TensorDataset(r_tensor, l_tensor)
+        data_loader = torch.utils.data.DataLoader(
+            data, 
+            shuffle=True,
+            batch_size=batch_size
+        )
+        
+        return data_loader
+    
+    @staticmethod
+    def generate_dataloader_from_tensors(result):
+        
+        review_tensor = result['review_tensor']
+        label_tensor = result['label_tensor']
+
+        dataloader = Utility.tensors_to_dataloader(review_tensor, label_tensor)
+        
+        return dataloader
