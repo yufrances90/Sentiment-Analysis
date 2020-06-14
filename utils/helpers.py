@@ -4,6 +4,7 @@ import re
 import nltk
 import string
 import csv
+import torch
 
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
@@ -12,6 +13,7 @@ from nltk.tokenize import \
     word_tokenize
 from tqdm.notebook import tqdm
 from nltk.stem import WordNetLemmatizer 
+from keras.preprocessing.text import Tokenizer
 
 translator = str.maketrans('', '', string.punctuation)
 stop_words = set(stopwords.words("english")) 
@@ -62,5 +64,52 @@ class Utility:
                     fieldnames[0]: review, 
                     fieldnames[1]: label
                 })
-
-   
+                
+    @staticmethod
+    def read_csv_into_pd_dataframe(key):
+        return pd.read_csv(f'output/{key}.csv')
+    
+    @staticmethod
+    def reviews_text_to_tensor(t, reviews):
+        
+        encoded_reviews = t.texts_to_matrix(reviews, mode='binary')
+        
+        return Utility.numpy_array_to_torch_tensor(encoded_reviews)
+    
+    @staticmethod
+    def label_pd_series_to_tensor(labels):
+        
+        label_arr = Utility.pandas_series_to_numpy_array(labels).reshape(-1, 1)
+        
+        return Utility.numpy_array_to_torch_tensor(label_arr)
+    
+    @staticmethod
+    def pandas_series_to_numpy_array(pd_series):
+        return pd_series.to_numpy()
+    
+    @staticmethod
+    def numpy_array_to_torch_tensor(np_arr):
+        return torch.from_numpy(np_arr)
+        
+    @staticmethod
+    def generate_tensors_from_csv_file(key, t=None):
+        
+        df = Utility.read_csv_into_pd_dataframe(key)
+        
+        reviews = df['reviews']
+        labels = df['labels']
+        
+        if t is None and key == 'tn_reviews':
+            
+            t = Tokenizer()
+            
+            t.fit_on_texts(reviews)
+            
+        review_tensor = Utility.reviews_text_to_tensor(t, reviews)
+        label_tensor = Utility.label_pd_series_to_tensor(labels)
+        
+        return {
+            'tokenizer': t,
+            'review_tensor': review_tensor,
+            'label_tensor': label_tensor
+        }
