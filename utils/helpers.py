@@ -3,6 +3,7 @@ import numpy as np
 import re
 import nltk
 import string
+import csv
 
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
@@ -46,10 +47,20 @@ class Utility:
         return updated_reviews
     
     @staticmethod
-    def write_list_to_text_file(lst, filepath):
+    def write_list_to_csv_file(reviews, labels, filepath):
         
-        with open(f'output/{filepath}', 'w') as f:
-            for item in tqdm(lst):
-                f.write("%s\n" % item)
+        with open(f'output/{filepath}', 'w', newline='') as csvfile:
+            
+            fieldnames = ['reviews', 'labels']
+            
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            
+            writer.writeheader()
+            
+            for (review, label) in tqdm(zip(reviews, labels)):
+                writer.writerow({
+                    fieldnames[0]: review, 
+                    fieldnames[1]: label
+                })
 
    
